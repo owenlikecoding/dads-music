@@ -7,18 +7,17 @@ import DemographicChart from './DemographicChart'
 import KeywordGenerator from './KeywordGenerator'
 import DemographicLinks from './DemographicLinks'
 
-
-
-interface Params {
-  id: string;
+interface PageProps {
+  params: Promise<{ id: string }>
 }
 
-export default async function ProjectPage({ params }: { params: Params }) {
+export default async function ProjectPage({ params }: PageProps) {
+  const { id } = await params
   const supabase = createServerComponentClient({ cookies })
   const { data: project } = await supabase
     .from('projects')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (!project) {
@@ -66,11 +65,11 @@ export default async function ProjectPage({ params }: { params: Params }) {
         </div>
       </div>
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <KeywordGenerator/>
+        <KeywordGenerator  />
         <DemographicLinks genre={project.genre} />
       </div>
       <div className="mt-6">
-        <ProjectQuestions projectId={params.id} />
+        <ProjectQuestions projectId={id} />
       </div>
     </div>
   )
@@ -86,3 +85,4 @@ function parseAnalysis(analysis: string) {
     };
   });
 }
+
