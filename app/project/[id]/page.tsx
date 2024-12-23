@@ -9,8 +9,8 @@ import DemographicLinks from './DemographicLinks'
 
 interface ProjectPageProps {
   params: {
-    id: string;
-  };
+    id: string
+  }
 }
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
