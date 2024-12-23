@@ -7,13 +7,13 @@ import DemographicChart from './DemographicChart'
 import KeywordGenerator from './KeywordGenerator'
 import DemographicLinks from './DemographicLinks'
 
-interface ProjectPageProps {
-  params: {
-    id: string
-  }
+
+
+interface Params {
+  id: string;
 }
 
-export default async function ProjectPage({ params }: ProjectPageProps) {
+export default async function ProjectPage({ params }: { params: Params }) {
   const supabase = createServerComponentClient({ cookies })
   const { data: project } = await supabase
     .from('projects')
