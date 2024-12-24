@@ -2,7 +2,9 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import ProjectQuestions from './ProjectQuestions'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import ProjectInfo from './ProjectInfo'
+import AIAnalysis from './AIAnalysis'
 import DemographicChart from './DemographicChart'
 import KeywordGenerator from './KeywordGenerator'
 import DemographicLinks from './DemographicLinks'
@@ -24,65 +26,45 @@ export default async function ProjectPage({ params }: PageProps) {
     notFound()
   }
 
-  const sections = parseAnalysis(project.analysis)
-
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Project Details: {project.genre}</h1>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div>
+    <div className="container mx-auto p-4 space-y-6">
+      <h1 className="text-3xl font-bold">{project.genre} Project</h1>
+      
+      <Tabs defaultValue="info">
+        <TabsList>
+          <TabsTrigger value="info">Project Info</TabsTrigger>
+          <TabsTrigger value="analysis">AI Analysis</TabsTrigger>
+          <TabsTrigger value="demographics">Demographics</TabsTrigger>
+          <TabsTrigger value="resources">Resources</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="info">
+          <ProjectInfo project={project} />
+        </TabsContent>
+        
+        <TabsContent value="analysis">
+          <AIAnalysis analysis={project.analysis} />
+        </TabsContent>
+        
+        <TabsContent value="demographics">
           <Card>
             <CardHeader>
-              <CardTitle>Artist Information</CardTitle>
+              <CardTitle>Audience Demographics</CardTitle>
             </CardHeader>
             <CardContent>
-              <p><strong>Genre:</strong> {project.genre}</p>
-              <p><strong>Style:</strong> {project.style}</p>
-              <p><strong>Influences:</strong> {project.influences}</p>
-              <p><strong>Description:</strong> {project.description}</p>
+              <DemographicChart genre={project.genre} />
             </CardContent>
           </Card>
-          <div className="mt-6">
-            <DemographicChart genre={project.genre} />
+        </TabsContent>
+        
+        <TabsContent value="resources">
+          <div className="grid gap-6 md:grid-cols-2">
+            <KeywordGenerator genre={project.genre} style={project.style} influences={project.influences} />
+            <DemographicLinks genre={project.genre} />
           </div>
-        </div>
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold">AI Analysis Result</h2>
-          {sections.map((section, index) => (
-            <Card key={index}>
-              <CardHeader>
-                <CardTitle>{section.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="list-disc pl-5 space-y-2">
-                  {section.content.map((item, itemIndex) => (
-                    <li key={itemIndex}>{item}</li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <KeywordGenerator  />
-        <DemographicLinks genre={project.genre} />
-      </div>
-      <div className="mt-6">
-        <ProjectQuestions projectId={id} />
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
-}
-
-function parseAnalysis(analysis: string) {
-  const sections = analysis.split(/\*\*\d+\.\s/).slice(1);
-  return sections.map(section => {
-    const [title, ...content] = section.split('\n').filter(line => line.trim() !== '');
-    return {
-      title: title.replace(/\*\*/g, '').trim(),
-      content: content.map(line => line.replace(/^\*\s/, '').trim())
-    };
-  });
 }
 

@@ -1,57 +1,73 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {  CardContent } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { getDemographicData } from '../../actions/aiActions'
 
-type GenreData = {
-  [key: string]: { age: string; percentage: number }[];
-};
-
-const mockData: GenreData = {
-  'Pop': [
-    { age: '13-17', percentage: 25 },
-    { age: '18-24', percentage: 35 },
-    { age: '25-34', percentage: 20 },
-    { age: '35-44', percentage: 10 },
-    { age: '45+', percentage: 10 },
-  ],
-  'Rock': [
-    { age: '13-17', percentage: 15 },
-    { age: '18-24', percentage: 25 },
-    { age: '25-34', percentage: 30 },
-    { age: '35-44', percentage: 20 },
-    { age: '45+', percentage: 10 },
-  ],
-  
+interface DemographicData {
+  age: string;
+  percentage: number;
 }
 
 export default function DemographicChart({ genre }: { genre: string }) {
-    const [data, setData] = useState<{ age: string; percentage: number }[]>([])
+  const [data, setData] = useState<DemographicData[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // In a real application, you would fetch this data from an API
-    setData(mockData[genre] || mockData['Pop'])
+    const fetchData = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+        const demographicData = await getDemographicData(genre)
+        const formattedData = Object.entries(demographicData).map(([age, percentage]) => ({
+          age,
+          percentage: Number(percentage)
+        }))
+        setData(formattedData)
+      } catch (error) {
+        console.error('Error fetching demographic data:', error)
+        setError('Failed to load demographic data')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchData()
   }, [genre])
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Demographic Distribution for {genre}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="age" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="percentage" fill="#8884d8" />
-          </BarChart>
-        </ResponsiveContainer>
+    <CardContent>
+        {isLoading ? (
+          <div className="flex justify-center items-center h-[300px]">
+            <p>Loading demographic data...</p>
+          </div>
+        ) : error ? (
+          <div className="flex justify-center items-center h-[300px]">
+            <p className="text-red-500">{error}</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="age" />
+              <YAxis domain={[0, 100]} />
+              <Tooltip 
+                formatter={(value) => [`${value}%`, 'Percentage']}
+                labelFormatter={(label) => `Age: ${label}`}
+              />
+              <Legend />
+              <Bar 
+                dataKey="percentage" 
+                fill="hsl(var(--primary))" 
+                name="Age Distribution"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </CardContent>
-    </Card>
   )
 }
 

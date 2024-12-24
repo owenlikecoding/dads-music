@@ -2,32 +2,36 @@
 
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { generateKeywords } from '../../actions/aiActions'
 
-export default function KeywordGenerator() {
+export default function KeywordGenerator({ genre, style, influences }: { genre: string, style: string, influences: string }) {
   const [keywords, setKeywords] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(false)
 
-  const generateKeywords = async () => {
-    // In a real application, you would call an API to generate keywords
-    const mockKeywords = ['Music', 'Artist', 'Genre', 'Audience', 'Fans', 'Concert', 'Album', 'Streaming', 'Social Media', 'Promotion']
-    setKeywords(mockKeywords)
+  const handleGenerateKeywords = async () => {
+    setIsLoading(true)
+    try {
+      const generatedKeywords = await generateKeywords(genre, style, influences)
+      setKeywords(generatedKeywords)
+    } catch (error) {
+      console.error('Error generating keywords:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Keyword Generator</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Button onClick={generateKeywords}>Generate Keywords</Button>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {keywords.map((keyword, index) => (
-            <Badge key={index} variant="secondary">{keyword}</Badge>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div>
+      <Button onClick={handleGenerateKeywords} disabled={isLoading}>
+        {isLoading ? 'Generating...' : 'Generate Keywords'}
+      </Button>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {keywords.map((keyword, index) => (
+          <Badge key={index} variant="secondary">{keyword}</Badge>
+        ))}
+      </div>
+    </div>
   )
 }
 

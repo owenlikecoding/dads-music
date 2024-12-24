@@ -1,32 +1,37 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+'use client'
 
-type GenreLinks = {
-  [key: string]: { name: string; url: string }[];
-};
+import { useState, useEffect } from 'react'
+import { findDemographicLinks } from '../../actions/aiActions'
 
-const mockLinks: GenreLinks = {
-  'Pop': [
-    { name: 'Spotify for Artists', url: 'https://artists.spotify.com/' },
-    { name: 'TikTok for Business', url: 'https://www.tiktok.com/business/' },
-    { name: 'Instagram for Business', url: 'https://business.instagram.com/' },
-  ],
-  'Rock': [
-    { name: 'Bandcamp for Artists', url: 'https://bandcamp.com/artists' },
-    { name: 'ReverbNation', url: 'https://www.reverbnation.com/' },
-    { name: 'Last.fm', url: 'https://www.last.fm/' },
-  ],
-  // Add more genres as needed
+interface Link {
+  name: string;
+  url: string;
 }
 
 export default function DemographicLinks({ genre }: { genre: string }) {
-  const links = mockLinks[genre] || mockLinks['Pop']
+  const [links, setLinks] = useState<Link[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchLinks = async () => {
+      try {
+        const fetchedLinks = await findDemographicLinks(genre)
+        setLinks(fetchedLinks)
+      } catch (error) {
+        console.error('Error fetching demographic links:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchLinks()
+  }, [genre])
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Useful Links for {genre} Artists</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div>
+      {isLoading ? (
+        <p>Loading links...</p>
+      ) : (
         <ul className="list-disc pl-5 space-y-2">
           {links.map((link, index) => (
             <li key={index}>
@@ -36,8 +41,8 @@ export default function DemographicLinks({ genre }: { genre: string }) {
             </li>
           ))}
         </ul>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   )
 }
 
